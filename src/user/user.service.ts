@@ -1,12 +1,33 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { returnUserObject } from './return-user.object';
 import { USER_ROLES } from '../../types/user';
+import { faker } from '@faker-js/faker';
+import { UserDto } from './dto/user.dto';
+import { hash } from 'argon2';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
+
+  async create(dto: UserDto): Promise<User | null> {
+    const user = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        name: faker.person.firstName(),
+        avatarPath: faker.image.avatar(),
+        phone: faker.phone.number(),
+        password: await hash(dto.password),
+      },
+    });
+
+    if (user) {
+      return user;
+    } else {
+      return null;
+    }
+  }
 
   async getById(id: string, selectObject: Prisma.UserSelect = {}) {
     const user = await this.prisma.user.findUnique({

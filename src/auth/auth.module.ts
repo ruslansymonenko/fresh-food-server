@@ -8,12 +8,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getJwtConfig } from '../config/jwt.config';
 import { LogRequestInterceptor } from '../utils/log-request-interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { UserService } from '../user/user.service';
 
 @Module({
   controllers: [AuthController],
   providers: [
     AuthService,
     PrismaService,
+    UserService,
     JwtStrategy,
     { provide: APP_INTERCEPTOR, useClass: LogRequestInterceptor }, //DEV ONLY! Remove from
     // production
