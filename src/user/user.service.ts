@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma } from '@prisma/client';
 import { returnUserObject } from './return-user.object';
+import { USER_ROLES } from '../../types/user';
 
 @Injectable()
 export class UserService {
@@ -53,6 +54,23 @@ export class UserService {
             id: productId,
           },
         },
+      },
+    });
+
+    return { message: 'success' };
+  }
+
+  async changeRole(userId: string, updatedRole: USER_ROLES) {
+    const user = await this.getById(userId);
+
+    if (!user) throw new NotFoundException('product not found');
+
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        user_role: updatedRole,
       },
     });
 

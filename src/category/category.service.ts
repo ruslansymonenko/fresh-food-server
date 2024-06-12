@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma.service';
 import { returnCategoryObject } from './return-category.object';
 import { CategoryDto } from './dto/category.dto';
 import { generateSlug } from '../utils/generate-slug';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CategoryService {
