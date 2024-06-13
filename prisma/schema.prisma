@@ -13,47 +13,56 @@ enum UserRole {
   MANAGER
 }
 
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DONE
+}
+
 model User {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  user_role UserRole @default(CUSTOMER)
+  userRole  UserRole @default(CUSTOMER) @map("user_role")
 
-  email      String @unique
-  password   String
-  name       String @unique
-  avatarPath String @default("/uploads/default-avatar.png") @map("avatar_path")
-  phone      String @default("")
+  email    String @unique
+  password String
+  name     String @unique
+  phone    String @default("")
 
   favorites Product[]
   orders    Order[]
+  reviews   Review[]
 
   @@map("users")
 }
 
 model Product {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAtt DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  name        String @unique
-  slug        String @unique
+  name        String   @unique
+  slug        String   @unique
   description String
   price       Int
-  image       String
+  images      String[]
 
-  category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId String?
-  user       User?     @relation(fields: [userId], references: [id])
-  userId     String?
+  category   Category?   @relation(fields: [categoryId], references: [id])
+  categoryId String?     @map("category_id")
+  user       User?       @relation(fields: [userId], references: [id])
+  userId     String?     @map("user_id")
+  reviews    Review[]
+  orderItems OrderItem[]
 
   @@map("product")
 }
 
 model Category {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAtt DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   name  String @unique
   slug  String @unique
@@ -65,14 +74,49 @@ model Category {
 }
 
 model Order {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAtt DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  reference String @unique
+  status OrderStatus @default(PENDING)
 
   user   User?   @relation(fields: [userId], references: [id])
-  userId String?
+  userId String? @map("user_id")
+
+  orderItems OrderItem[]
 
   @@map("order")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  quantity Int
+  price    Int
+
+  order   Order?  @relation(fields: [orderId], references: [id])
+  orderId String? @map("order_id")
+
+  product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+
+  @@map("order_item")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  rating Int
+  text   String
+
+  product   Product? @relation(fields: [productId], references: [id])
+  productId String?  @map("product_id")
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?  @map("user_id")
+
+  @@map("review")
 }

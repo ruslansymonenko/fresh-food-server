@@ -93,7 +93,7 @@ export class ProductService {
       data: {
         name: '',
         slug: '',
-        image: '',
+        images: [''],
         description: '',
         price: 0,
       },
@@ -101,7 +101,7 @@ export class ProductService {
   }
 
   async update(id: string, dto: ProductDto) {
-    const { name, description, price, categoryId, image } = dto;
+    const { name, description, price, categoryId, images } = dto;
     const isProduct = await this.checkProduct(id);
 
     if (!isProduct) throw new NotFoundException('product not found');
@@ -116,7 +116,7 @@ export class ProductService {
         name,
         description,
         price,
-        image,
+        images,
         slug: generateSlug(name),
         category: {
           connect: {

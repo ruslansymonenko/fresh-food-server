@@ -16,7 +16,6 @@ export class UserService {
       data: {
         email: dto.email,
         name: faker.person.firstName(),
-        avatarPath: faker.image.avatar(),
         phone: faker.phone.number(),
         password: await hash(dto.password),
       },
@@ -41,11 +40,13 @@ export class UserService {
             id: true,
             name: true,
             price: true,
-            image: true,
+            images: true,
             slug: true,
             category: {
               select: {
+                id: true,
                 name: true,
+                slug: true,
               },
             },
           },
@@ -63,7 +64,7 @@ export class UserService {
 
     if (!user) throw new NotFoundException('product not found');
 
-    const isExist = user.favorites.some((product) => product.id === productId);
+    const isExist: boolean = user.favorites.some((product) => product.id === productId);
 
     await this.prisma.user.update({
       where: {
@@ -91,7 +92,7 @@ export class UserService {
         id: user.id,
       },
       data: {
-        user_role: updatedRole,
+        userRole: updatedRole,
       },
     });
 

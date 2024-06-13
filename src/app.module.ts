@@ -8,6 +8,10 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { HttpModule } from '@nestjs/axios';
 import { join } from 'path';
 import { CLIENT_URL } from './consts/client';
+import { ReviewModule } from './review/review.module';
+import { OrderModule } from './order/order.module';
+import { StatisticModule } from './statistic/statistic.module';
+import { PaginationModule } from './pagination/pagination.module';
 
 @Module({
   imports: [
@@ -21,9 +25,13 @@ import { CLIENT_URL } from './consts/client';
       withCredentials: true,
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      rootPath: join(__dirname, '..', '..', 'uploads'),
       serveRoot: '/uploads',
     }),
+    ReviewModule,
+    OrderModule,
+    StatisticModule,
+    PaginationModule,
   ],
   controllers: [],
   providers: [],

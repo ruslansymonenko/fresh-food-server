@@ -33,11 +33,12 @@ export class CategoryController {
     return this.categoryService.getBySlug(slug);
   }
 
+  @UsePipes(new ValidationPipe())
   @HttpCode(200)
   @Post('create')
   @Auth()
-  async create() {
-    return this.categoryService.create();
+  async create(@Body() dto: CategoryDto) {
+    return this.categoryService.create(dto);
   }
 
   @UsePipes(new ValidationPipe())
