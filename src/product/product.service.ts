@@ -4,15 +4,19 @@ import { returnProductObject } from './return-product.object';
 import { ProductDto } from './dto/product.dto';
 import { generateSlug } from '../utils/generate-slug';
 import { CategoryService } from '../category/category.service';
+import { EnumProductSort, GetAllProductDto } from './dto/getAllProduct.dto';
+import { PaginationService } from '../pagination/pagination.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
   constructor(
     private prisma: PrismaService,
     private categoryService: CategoryService,
+    private paginationService: PaginationService,
   ) {}
 
-  private async checkProduct(id: string) {
+  async checkProduct(id: string) {
     const product = await this.prisma.product.findUnique({
       where: {
         id,
@@ -25,17 +29,70 @@ export class ProductService {
     return product;
   }
 
-  async getAll(searchTerm?: string) {
-    if (searchTerm) {
-      return this.search(searchTerm);
+  async getAll(dto: GetAllProductDto = {}) {
+    const { sort, searchTerm } = dto;
+
+    const prismaSort: Prisma.ProductOrderByWithRelationInput[] = [];
+
+    switch (sort) {
+      case EnumProductSort.LOW_PRICE:
+        prismaSort.push({ price: 'asc' });
+        break;
+      case EnumProductSort.HIGH_PRICE:
+        prismaSort.push({ price: 'desc' });
+        break;
+      case EnumProductSort.NEWEST:
+        prismaSort.push({ createdAt: 'desc' });
+        break;
+      case EnumProductSort.OLDEST:
+        prismaSort.push({ createdAt: 'asc' });
+        break;
+      default:
+        prismaSort.push({ createdAt: 'desc' });
     }
 
-    return this.prisma.product.findMany({
-      select: returnProductObject,
-      orderBy: {
-        createdAt: 'desc',
-      },
+    const prismaSearchTermFilter: Prisma.ProductWhereInput = searchTerm
+      ? {
+          OR: [
+            {
+              category: {
+                name: {
+                  contains: searchTerm,
+                  mode: 'insensitive',
+                },
+              },
+            },
+            {
+              name: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
+            },
+            {
+              description: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        }
+      : {};
+
+    const { perPage, skip } = this.paginationService.getPagination(dto);
+
+    const products = await this.prisma.product.findMany({
+      where: prismaSearchTermFilter,
+      orderBy: prismaSort,
+      skip,
+      take: perPage,
     });
+
+    return {
+      products,
+      length: await this.prisma.product.count({
+        where: prismaSearchTermFilter,
+      }),
+    };
   }
 
   async search(searchTerm: string) {
@@ -88,12 +145,34 @@ export class ProductService {
     return products;
   }
 
+  async getSimilar(productId: string) {
+    const product = await this.checkProduct(productId);
+
+    if (!product) throw new NotFoundException('product not found');
+
+    const products = await this.prisma.product.findMany({
+      where: {
+        category: {
+          name: product.category.name,
+        },
+        NOT: {
+          id: product.id,
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: returnProductObject,
+    });
+
+    return products;
+  }
+
   async create() {
     return this.prisma.product.create({
       data: {
         name: '',
         slug: '',
-        images: [''],
         description: '',
         price: 0,
       },

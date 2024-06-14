@@ -7,20 +7,27 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { ProductDto } from './dto/product.dto';
 import { Auth } from '../auth/decoratos/auth.decorator';
+import { GetAllProductDto } from './dto/getAllProduct.dto';
 
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @Get('get-all')
-  async getAll() {
-    return this.productService.getAll();
+  @Get('all')
+  async getAll(@Query() queryDto: GetAllProductDto) {
+    return this.productService.getAll(queryDto);
+  }
+
+  @Get('get-similar/:productId')
+  async getSimilar(@Param('productId') productId: string) {
+    return this.productService.getSimilar(productId);
   }
 
   @Get('by-slug/:slug')

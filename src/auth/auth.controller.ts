@@ -57,8 +57,6 @@ export class AuthController {
       throw new UnauthorizedException('Server error');
     }
 
-    console.log(refreshToken);
-
     this.authService.addRefreshTokenToResponse(res, refreshToken);
 
     return response;

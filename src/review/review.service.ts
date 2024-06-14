@@ -2,14 +2,18 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { returnReviewObject } from './return-review.object';
 import { ReviewDto } from './dto/review.dto';
-import { generateSlug } from '../utils/generate-slug';
-import { da } from '@faker-js/faker';
+import { UserService } from '../user/user.service';
+import { ProductService } from '../product/product.service';
 
 @Injectable()
 export class ReviewService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private userService: UserService,
+    private productService: ProductService,
+  ) {}
 
-  private async checkReview(id: string) {
+  async checkReview(id: string) {
     const review = await this.prisma.review.findUnique({
       where: {
         id,
@@ -40,6 +44,14 @@ export class ReviewService {
   }
 
   async create(userId: string, productId: string, dto: ReviewDto) {
+    if (!userId && !productId) throw new NotFoundException('User or Product not found');
+
+    const isUser = await this.userService.getById(userId);
+    if (!isUser) throw new NotFoundException('User not found');
+
+    const isProduct = await this.productService.checkProduct(productId);
+    if (!isProduct) throw new NotFoundException('Product not found');
+
     return this.prisma.review.create({
       data: {
         ...dto,
@@ -86,6 +98,10 @@ export class ReviewService {
   }
 
   async getAverageValueByProductId(productId: string) {
+    const isProduct = await this.productService.checkProduct(productId);
+
+    if (!isProduct) throw new NotFoundException('Product not found');
+
     return this.prisma.review
       .aggregate({
         where: { productId },
